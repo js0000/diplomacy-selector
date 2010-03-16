@@ -1,0 +1,240 @@
+<html>
+  <head>
+    <title>Diplomacy Selector</title>
+
+    <script type="text/javascript">var ds = {
+
+      // copyright 2010 john saylor, distributed under terms of gpl
+
+      COUNTRIES : [ 'AU', 'EN', 'FR', 'GE', 'IT', 'RU', 'TU' ],
+    
+      // max number of assignment attempts before bailing
+      max_tries : 0,
+      
+      ASSIGNMENTS : {},
+
+      // updates HTML with ASSIGNMENTS
+      populate_teams : function( reset ) {
+        
+	var teams = document.getElementById( 'teams' );
+  
+        // clean up
+	if ( teams.hasChildNodes() ) {
+          while ( teams.childNodes.length >= 1 ) {
+            teams.removeChild( teams.firstChild );       
+          } 
+        }
+
+        var fragment = document.createDocumentFragment(); 
+        if ( ! reset ) {
+          for( var i = 0; i < ds.COUNTRIES.length; i++ ) {
+            var li = document.createElement( 'li' );
+            li.appendChild( document.createTextNode( ds.COUNTRIES[i] ) );
+            var ul = document.createElement( 'ul' );
+
+            for( j = 0; j < ds.ASSIGNMENTS[ ds.COUNTRIES[i] ].length; j++ ) {
+              var inner_li = document.createElement( 'li' );
+              inner_li.appendChild( document.createTextNode( ds.ASSIGNMENTS[ ds.COUNTRIES[i] ][j] ) );
+              ul.appendChild( inner_li );
+            }
+
+            li.appendChild( ul );
+            fragment.appendChild( li );
+          }
+        }
+	else {
+          var li = document.createElement( 'li' );
+          li.appendChild( document.createTextNode( 'none yet' ) );
+          fragment.appendChild( li );
+	}
+
+        teams.appendChild( fragment );
+      },
+
+      // warns user and clears list
+      max_tries_exceeded : function() {
+        var msg = 'script is unable to match after ' + ds.max_tries + " attempts\n";
+	msg += 'please try again.';
+	alert( msg );
+        ds.populate_teams( true );
+      },
+
+      // generates ASSIGNMENTS
+      set_teams : function() {
+
+        var raw_config = document.getElementById( 'config' );
+  
+        var config;
+        try {
+          config = eval( '(' + raw_config.value + ')' );  
+        }
+        catch(e) {
+          var msg = "could not create javascript object from json\n";
+
+          if ( e.description ) { 
+            msg += e.description;
+          }
+          else if ( e.message ) {
+            msg += e.message;
+          }
+          alert( msg );
+          return false;
+        }
+
+        // clear
+	var i;
+        for( i = 0; i < ds.COUNTRIES.length; i++ ) {
+          ds.ASSIGNMENTS[ ds.COUNTRIES[i] ] = [];
+        }
+	
+	// safety net
+	if ( ds.max_tries < 1 ) {
+	  ds.max_tries = ds.COUNTRIES.length * 4;
+        }
+        // L33TS
+        var j;
+        var count;
+        for( i = 0; i < config.L33TS.length; i++ ) {
+          var assigned = false;
+          count = 0;
+          while ( ! assigned ) {
+
+            // bailing
+            if ( count > ds.max_tries ) {
+	      ds.max_tries_exceeded();
+	      return false;
+            }
+            else {
+              count += 1;
+            }
+
+            var rnd = Math.floor(Math.random()*7)
+
+            // country has already been assigned this loop
+            if ( ds.ASSIGNMENTS[ ds.COUNTRIES[ rnd ] ].length > Math.floor( i / 7 ) ) {
+              continue;
+            }
+
+            // country matches omit
+            var matches = false;
+            for ( j = 0; j < config.L33TS[i].omit.length; j++ ) {
+              if  ( ds.COUNTRIES[ rnd ] == config.L33TS[i].omit[j] ) {
+                matches = true;
+	        break;
+              }
+            }
+            if ( matches ) { continue; }
+      
+            // match
+            ds.ASSIGNMENTS[ ds.COUNTRIES[ rnd ] ].push( config.L33TS[i].name );
+            assigned = true;
+          }
+        }
+
+        // N00BS
+        // needed to offset loop counting
+        var l33ts_length = config.L33TS.length;
+        for( i = 0; i < config.N00BS.length; i++ ) {
+          var assigned = false;
+          count = 0;
+          while ( ! assigned ) {
+      
+            if ( count > ds.max_tries ) {
+	      ds.max_tries_exceeded();
+	      return false;
+            }
+            else {
+              count += 1;
+            }
+
+            var rnd = Math.floor(Math.random()*7)
+
+            // fill them all up evenly
+            if ( ds.ASSIGNMENTS[ ds.COUNTRIES[ rnd ] ].length > Math.floor( ( i + l33ts_length ) / 7 ) ) {
+              continue;
+            }
+
+            ds.ASSIGNMENTS[ ds.COUNTRIES[ rnd ] ].push( config.N00BS[i] );
+            assigned = true;
+          }
+        }
+
+	ds.populate_teams();
+        return false;
+      }
+
+    }</script>
+
+    <style type="text/css">
+      body { font-family: Georgia, Times, serif; }
+      h1, h2 { font-family: Verdana, Helvetica, sans-serif; color: maroon; }
+      .note { color: gray; font-size: smaller; }
+    </style>
+
+  </head>
+
+
+  <body onload="ds.populate_teams( true );">
+    <h1>Diplomacy Selector</h1>
+    <p>this is a web page to make diplomacy country assignments. to run,
+    paste a json structure into the text box below and click the button.
+    easy!</p>
+
+
+    <form onsubmit="return ds.set_teams();">
+    
+      <textarea name="config" id="config" rows="8" cols="64">
+{
+  L33TS : [
+    { name : 'l0', omit : [ 'EN' ] },
+    { name : 'l1', omit : [ 'IT' ] },
+    { name : 'l2', omit : [ 'TU' ] },
+    { name : 'l3', omit : [ 'RU' ] },
+    { name : 'l4', omit : [ 'GE' ] },
+    { name : 'l5', omit : [ 'FR' ] },
+    { name : 'l6', omit : [ 'AU' ] }
+  ],
+  N00BS : [
+    'n0',
+    'n1',
+    'n2',
+    'n3',
+    'n4',
+    'n5',
+    'n6'
+  ]
+}
+      </textarea>
+
+      <p><input type="submit" value="click me!" /></p>
+    </form>
+
+    <h2>Generated Teams</h2>
+
+    <ul id="teams"></ul>
+    
+    <p class="note">here are some notes on the json data structure:</p>
+    <ul class="note">
+      <li><strong>L33TS</strong> array of objects, each inner object as follows
+        <ul>
+	  <li>name: id string</li>
+	  <li>omit: array of countries to skip
+        </ul>
+      </li>
+     <li><strong>N00BS</strong> array of id strings for players</li>
+      <li>country key [first two letters]
+        <ul>
+	  <li>AU</li>
+	  <li>EN</li>
+	  <li>FR</li>
+	  <li>GE</li>
+	  <li>IT</li>
+	  <li>RU</li>
+	  <li>TU</li>
+	</ul>
+      </li>
+    </ul>
+
+
+  </body>
+</html>
