@@ -1,0 +1,15 @@
+ds.html
+Diplomacy Selector
+
+this is a javascript program wrapped in HTML to "randomly" choose teams for a game of diplomacy.
+
+it allows 2 classes of users
+ 1. L33TS
+ 2. N00BS
+
+leets are allowed an extra attribute: "omit." the attribute consists of a list of countries that are not allowed for this particular user. of course, the program does not care *why* certain countries are to be omitted ...
+
+enjoy and feel free to make improvements.
+
+--
+\js
